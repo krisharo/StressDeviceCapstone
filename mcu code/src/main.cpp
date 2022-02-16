@@ -18,8 +18,10 @@
   #include <WiFiClient.h>
 #endif
 #include <TickTwo.h>
+#include 'refs.h'
 
 void readNLog();
+void valueRead();
 
 //--- Wi-Fi & SQL variables ---
 // Wifi netowrk credentials
@@ -32,14 +34,23 @@ String apiKeyValue = "tPmAT5Ab3j7F9"; // API key for communicating with serverNa
 
 //--- Ticker variables for time tracking
 TickTwo timer1(readNLog, 1000*60); // once, every minute
+TickTwo timer2(valueRead, 5); // repeat every 5 ms
+
+// --- Variables for data collection
+int gsrArr[15]; // hold 15 values to average out
+int hrArr[15];
+int tempArr[15];
+int count = 0;
+const int curGsr = A0; // current value on the analog pin
+int gsr = 0; // average that will be logged/discarded if it is bad
 
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  pinMode (LED_BUILTIN, OUTPUT);
   Serial.print("ready");
   timer1.start();
+  timer2.start();
 
   //connect to Wi-Fi network
   WiFi.begin(ssid, password);
@@ -56,7 +67,24 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  timer2.update(); // update timers
   timer1.update();
+}
+
+// this function is used to capture the analog inputs
+// it will trigger every 5ms
+void valueRead(){
+  int sensorVal = analogRead(curGsr); // read gsr
+  gsrArr[count] = sensorVal;
+  count++;
+  if(count == 14){ // array is full, take average
+    int gSum = 0;
+    for(int i = 0; i < count; i++){
+      gSum +=gsrArr[i];
+    }
+    gsr = gSum / 15;
+    count = 0;
+  }
 }
 
 // this function will tick every 60 seconds, where data will be logged
