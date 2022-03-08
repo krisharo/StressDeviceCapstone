@@ -38,7 +38,7 @@ const int httpsPort = 443;  //HTTPS= 443 and HTTP = 80
 const char fingerprint [] PROGMEM = "3D 98 A0 26 C8 EA ED 88 41 60 3F 00 C2 1F E1 80 08 E5 34 AB";
 
 //--- Ticker variables for time tracking
-TickTwo timer1(readNLog, 1000*30); // once, every 30s
+TickTwo timer1(readNLog, 1000*40); // once, every 40s
 TickTwo timer2(valueRead, 1000*5); // repeat every 5s
 int count = 0; // used for array counting
 
@@ -89,7 +89,7 @@ void valueRead(){
   }
   else{ // array is full, calcualate average
     Serial.println("data is ready for transmission");
-    int sumT, sumG, sumH = 0;
+    int sumT = 0, sumG = 0, sumH = 0;
     for(int i = 0; i < 6; i++){
       sumT += tempArr[i];
       sumG += gsrArr[i];
@@ -132,9 +132,9 @@ void readNLog(){
 
   Serial.print("requesting URL: ");
   Serial.println(host+Link);
-  String httpRequestData = "api_key=" + apiKeyValue + "&btemp=" + "24"
-                          + "&hr=" + "85"
-                          + "&gsr=" + "160" + "&switch=" + "1";
+  String httpRequestData = "api_key=" + apiKeyValue + "&btemp=" + String(tAvg)
+                          + "&hr=" + String(hAvg)
+                          + "&gsr=" + String(gAvg) + "&switch=" + "1";
 
   httpsClient.print(String("POST ") + Link + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
