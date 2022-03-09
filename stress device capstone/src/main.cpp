@@ -20,8 +20,6 @@
 #endif
 #include <TickTwo.h>
 #include <string.h>
-#include <time.h>
-#include "refs.h"
 
 void readNLog();
 void valueRead();
@@ -41,6 +39,14 @@ const char fingerprint [] PROGMEM = "3D 98 A0 26 C8 EA ED 88 41 60 3F 00 C2 1F E
 TickTwo timer1(readNLog, 1000*40); // once, every 40s
 TickTwo timer2(valueRead, 1000*5); // repeat every 5s
 int count = 0; // used for array counting
+int tempArr[6];
+int gsrArr[6];
+int hrArr[6];
+
+int tAvg = 1;
+int gAvg = 2;
+int hAvg = 3;
+bool once = false;
 
 
 
@@ -49,7 +55,7 @@ void setup() {
   Serial.begin(115200);
   Serial.print("ready");
   timer1.start();
-  //timer2.start();
+  timer2.start();
 
   //connect to Wi-Fi network
   WiFi.mode(WIFI_OFF);
@@ -76,8 +82,8 @@ void loop() {
 
 void valueRead(){
   if(count < 6){
-    srand(time(NULL));
     // generate typical values to be collected
+    Serial.println("here");
     int temp = rand() % 30 + 20;
     int gsr = rand() % 200 + 140;
     int hr = rand() % 100 + 60;
@@ -87,7 +93,7 @@ void valueRead(){
     hrArr[count] = hr;
     count++;
   }
-  else{ // array is full, calcualate average
+  else if(count >= 6){ // array is full, calcualate average
     Serial.println("data is ready for transmission");
     int sumT = 0, sumG = 0, sumH = 0;
     for(int i = 0; i < 6; i++){
@@ -111,12 +117,12 @@ void readNLog(){
   Serial.printf("Using fingerprint '%s'\n", fingerprint);
   httpsClient.setFingerprint(fingerprint);
   httpsClient.setTimeout(10000); // 15 Seconds
-  delay(500);
+  delay(200);
   
   Serial.print("HTTPS Connecting");
   int r=0; //retry counter
   while((!httpsClient.connect(host, httpsPort)) && (r < 30)){
-      delay(100);
+      delay(50);
       Serial.print(".");
       r++;
   }
