@@ -34,9 +34,9 @@ const char* ca_cert= \
 "jjxDah2nGN59PRbxYvnKkKj9\n" \
 "-----END CERTIFICATE-----\n";
 
-const int hrPin = 15;
-const int gPin = 2;
-const int tPin = 4;
+const int hrPin = 36; // vp pin
+const int gPin = 39; // vn pin
+const int tPin = 34; // d34
 int count = 0; // used for array counting
 int tempArr[6];
 int gsrArr[6];

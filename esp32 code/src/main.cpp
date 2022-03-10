@@ -2,8 +2,14 @@
 #include <WiFiClientSecure.h>
 #include <TickTwo.h>
 #include <string.h>
-#include <time.h>
 #include "refs.h" // contains ca certificate for https post
+#define USE_ARDUINO_INTERRUPTS true    // Set-up low-level interrupts for most acurate BPM math
+#include <PulseSensorPlayground.h>     // Includes the PulseSensorPlayground Library
+
+// ------- MCU CONNECTIONS ----------
+// HR sensor         GPIO36/VP
+// Temp sensor       GPIO39/VN
+// GSR sensor        GPIO34/D34
 
 // function declarations
 void readNLog();
@@ -16,41 +22,56 @@ const char*  server = "web.engr.oregonstate.edu";  // Server URL
 const int port = 443;
 String apiKeyValue = "tPmAT5Ab3j7F9"; // API key for communicating with serverName
 
+
+// These timers execute the respective function at given intervals,
+// readNLog is for https transmission, valueRead is for sensor readings
 TickTwo timer1(readNLog, 1000*40); // once, every 40s
 TickTwo timer2(valueRead, 1000*5); // once every 5s
 WiFiClientSecure client;
+PulseSensorPlayground ps
 
 
 void setup() {
-  timer1.start();
+  timer1.start(); // initialize timers
   timer2.start();
   Serial.begin(115200);
-   WiFi.mode(WIFI_STA); //The WiFi is in station mode. The    other is the softAP mode
-   WiFi.begin(ssid, password);
+   WiFi.mode(WIFI_STA); //The WiFi is in station mode.
+   WiFi.begin(ssid, password); // connect to wifi network
    while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
    }
-   Serial.println("");  Serial.print("WiFi connected to: "); Serial.println(ssid);  Serial.println("IP address: ");  Serial.println(WiFi.localIP());
+   // successful connection
+   Serial.println("");  Serial.print("WiFi connected to: "); Serial.println(ssid);  
+   Serial.println("IP address: ");  Serial.println(WiFi.localIP());
    client.setCACert(ca_cert); //Only communicate with the server if the CA certificates match
-   delay(2000);
+
+   //setup pulseSensor
+   ps.analogInput(hrPin);
+   ps.setThreshold(550);
+   delay(1000);
 }
 
 void loop() {
  timer1.update();
  timer2.update();
+ // update timers, nothing else should happen here since 
+ // all operations are based on the ticker functions
 }
 
-void valueRead(){
+void valueRead(){ // collect sensor data
    if(count < 6){
     // analogRead here
     Serial.println("here");
+    // temp reading & calculation
     int temp = analogRead(tPin);
     float voltage = temp * 5;
     voltage /= 1024.0;
-    temp = (int) (voltage -.5) * 100; 
-    int gsr = analogRead(gPin);
-    int hr = analogRead(hrPin);
+    temp = (int) (voltage -.5) * 100;
+
+    int gsr = analogRead(gPin); // gsr read
+    // hr read and calculation
+    int hr = ps.getBeatsPerMinute();
     // store collected values into array
     tempArr[count] = temp;
     gsrArr[count] = gsr;
