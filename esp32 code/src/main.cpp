@@ -3,13 +3,11 @@
 #include <TickTwo.h>
 #include <string.h>
 #include "refs.h" // contains ca certificate for https post
-#define USE_ARDUINO_INTERRUPTS true    // Set-up low-level interrupts for most acurate BPM math
-#include <PulseSensorPlayground.h>     // Includes the PulseSensorPlayground Library
 
 // ------- MCU CONNECTIONS ----------
 // HR sensor         GPIO36/VP
-// Temp sensor       GPIO39/VN
-// GSR sensor        GPIO34/D34
+// Gsr sensor       GPIO39/VN
+// Temp sensor        GPIO34/D34
 
 // function declarations
 void readNLog();
@@ -28,7 +26,6 @@ String apiKeyValue = "tPmAT5Ab3j7F9"; // API key for communicating with serverNa
 TickTwo timer1(readNLog, 1000*40); // once, every 40s
 TickTwo timer2(valueRead, 1000*5); // once every 5s
 WiFiClientSecure client;
-PulseSensorPlayground ps
 
 
 void setup() {
@@ -46,9 +43,6 @@ void setup() {
    Serial.println("IP address: ");  Serial.println(WiFi.localIP());
    client.setCACert(ca_cert); //Only communicate with the server if the CA certificates match
 
-   //setup pulseSensor
-   ps.analogInput(hrPin);
-   ps.setThreshold(550);
    delay(1000);
 }
 
@@ -61,17 +55,9 @@ void loop() {
 
 void valueRead(){ // collect sensor data
    if(count < 6){
-    // analogRead here
-    Serial.println("here");
-    // temp reading & calculation
-    int temp = analogRead(tPin);
-    float voltage = temp * 5;
-    voltage /= 1024.0;
-    temp = (int) (voltage -.5) * 100;
-
-    int gsr = analogRead(gPin); // gsr read
-    // hr read and calculation
-    int hr = ps.getBeatsPerMinute();
+    int temp = 0;
+    int gsr = analogRead(gPin);
+    int hr = 0;
     // store collected values into array
     tempArr[count] = temp;
     gsrArr[count] = gsr;
@@ -109,6 +95,7 @@ void readNLog(){
       client.print("Content-Length: "); client.println(body_len);
       client.println("Connection: Close");
       client.println();
+      count =0;
       //Body
       client.println(body);
       client.println();
