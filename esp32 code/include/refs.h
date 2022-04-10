@@ -1,3 +1,15 @@
+/**
+ * @file refs.h
+ * @author Kris Haro
+ * @brief Header file for other variables to not clutter main.cpp
+ * @version 0.1
+ * @date 2022-04-09
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
+// ca certificate for https
 const char* ca_cert= \
 "-----BEGIN CERTIFICATE-----\n" \
 "MIIF3jCCA8agAwIBAgIQAf1tMPyjylGoG7xkDjUDLTANBgkqhkiG9w0BAQwFADCB\n" \
@@ -34,14 +46,18 @@ const char* ca_cert= \
 "jjxDah2nGN59PRbxYvnKkKj9\n" \
 "-----END CERTIFICATE-----\n";
 
+// variables for data collection
 const int hrPin = 36; // vp pin
 const int gPin = 39; // vn pin
 const int tPin = 34; // d34
 int count = 0; // used for array counting
-int tempArr[6];
-int gsrArr[6];
-int hrArr[6];
 
+// arrays for storing sensor values
+int tempArr[30];
+int gsrArr[30];
+int hrArr[60];
+
+// averages that will be transmistted
 int tAvg = 1;
 int gAvg = 2;
 int hAvg = 3;

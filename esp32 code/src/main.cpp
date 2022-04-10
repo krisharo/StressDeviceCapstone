@@ -23,59 +23,78 @@ String apiKeyValue = "tPmAT5Ab3j7F9"; // API key for communicating with serverNa
 
 // These timers execute the respective function at given intervals,
 // readNLog is for https transmission, valueRead is for sensor readings
-TickTwo timer1(readNLog, 1000*40); // once, every 40s
-TickTwo timer2(valueRead, 1000*5); // once every 5s
+//TickTwo timer1(readNLog, 1000*40); // once, every 40s
+TickTwo timer2(valueRead, 500); // once every 500ms
 WiFiClientSecure client;
 
 
 void setup() {
-  timer1.start(); // initialize timers
+  //timer1.start(); // initialize timers
   timer2.start();
   Serial.begin(115200);
-   WiFi.mode(WIFI_STA); //The WiFi is in station mode.
-   WiFi.begin(ssid, password); // connect to wifi network
-   while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-   }
-   // successful connection
-   Serial.println("");  Serial.print("WiFi connected to: "); Serial.println(ssid);  
-   Serial.println("IP address: ");  Serial.println(WiFi.localIP());
-   client.setCACert(ca_cert); //Only communicate with the server if the CA certificates match
+   // WiFi.mode(WIFI_STA); //The WiFi is in station mode.
+   // WiFi.begin(ssid, password); // connect to wifi network
+   // while (WiFi.status() != WL_CONNECTED) {
+   //    delay(500);
+   //    Serial.print(".");
+   // }
+   // // successful connection
+   // Serial.println("");  Serial.print("WiFi connected to: "); Serial.println(ssid);  
+   // Serial.println("IP address: ");  Serial.println(WiFi.localIP());
+   // client.setCACert(ca_cert); //Only communicate with the server if the CA certificates match
 
    delay(1000);
 }
 
 void loop() {
- timer1.update();
+ //timer1.update();
  timer2.update();
  // update timers, nothing else should happen here since 
  // all operations are based on the ticker functions
 }
 
-void valueRead(){ // collect sensor data
-   if(count < 6){
-    int temp = 0;
-    int gsr = analogRead(gPin);
-    int hr = 0;
-    // store collected values into array
-    tempArr[count] = temp;
-    gsrArr[count] = gsr;
-    hrArr[count] = hr;
-    count++;
-  }
-  else if(count >= 6){ // array is full, calcualate average
-    Serial.println("data is ready for transmission");
-    int sumT = 0, sumG = 0, sumH = 0;
-    for(int i = 0; i < 6; i++){
-      sumT += tempArr[i];
-      sumG += gsrArr[i];
-      sumH += hrArr[i];
-    }
-    tAvg = sumT / 6;
-    hAvg = sumH / 6;
-    gAvg = sumG / 6;
+// this funciton will collect sensor data
+// It will be ran every 500ms to detect a heartbeat
+// Every second, gsr and temperature are also collected
+// after 30 seconds, or 60 iterations, averages and bpm will be
+// calculated
+void valueRead(){
+   // collect analog values
+   if(count < 60){
+      if(!count % 2){ // enter here every second
+         int temp = 0;
+         int gsr = 0;
+         tempArr[count / 2] = temp;
+         gsrArr[count / 2] = gsr;
+      }
+      int hr = analogRead(hrPin); // read hr every 500ms
+      if(hr > 560){
+         hrArr[count] = 1; // log if beat is detected
+      }
+      else{hrArr[count] = 0;}
    }
+   
+   else if(count >= 60){
+      Serial.println("data is ready for transmission");
+      int sumT = 0, sumG = 0;
+      for(int i = 0; i < 30; i++){
+         sumT += tempArr[i];
+         sumG += gsrArr[i];
+      }
+      tAvg = sumT / 30;
+      gAvg = sumG / 30;
+      int beatCount = 0;
+      for(int i = 0; i < 60; i++){
+         if(hrArr[i] == 1){
+            beatCount++; // count beats detected
+         }
+      }
+      for(int i = 0; i < 60; i++){hrArr[i] = 0;}
+      Serial.print("BPM: ");
+      Serial.println(beatCount * 2); // multiply by 2 for bpm
+      count = 0; 
+   }
+   count++;
 }
 
 void readNLog(){
