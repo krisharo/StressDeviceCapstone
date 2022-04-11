@@ -55,7 +55,7 @@ int count = 0; // used for array counting
 // arrays for storing sensor values
 int tempArr[30];
 int gsrArr[30];
-int hrArr[60];
+int hrArr[120];
 
 // averages that will be transmistted
 int tAvg = 1;

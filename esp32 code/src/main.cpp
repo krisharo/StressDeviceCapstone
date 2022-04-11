@@ -24,7 +24,7 @@ String apiKeyValue = "tPmAT5Ab3j7F9"; // API key for communicating with serverNa
 // These timers execute the respective function at given intervals,
 // readNLog is for https transmission, valueRead is for sensor readings
 //TickTwo timer1(readNLog, 1000*40); // once, every 40s
-TickTwo timer2(valueRead, 500); // once every 500ms
+TickTwo timer2(valueRead, 250); // once every 500ms
 WiFiClientSecure client;
 
 
@@ -60,21 +60,22 @@ void loop() {
 // calculated
 void valueRead(){
    // collect analog values
-   if(count < 60){
-      if(!count % 2){ // enter here every second
+   if(count < 120){
+      if(!count % 4){ // enter here every second
          int temp = 0;
          int gsr = 0;
-         tempArr[count / 2] = temp;
-         gsrArr[count / 2] = gsr;
+         tempArr[count / 4] = temp;
+         gsrArr[count / 4] = gsr;
       }
       int hr = analogRead(hrPin); // read hr every 500ms
-      if(hr > 560){
+      //Serial.println(hr);
+      if(hr > 1980){
          hrArr[count] = 1; // log if beat is detected
       }
       else{hrArr[count] = 0;}
    }
    
-   else if(count >= 60){
+   else if(count >= 120){
       Serial.println("data is ready for transmission");
       int sumT = 0, sumG = 0;
       for(int i = 0; i < 30; i++){
@@ -84,12 +85,12 @@ void valueRead(){
       tAvg = sumT / 30;
       gAvg = sumG / 30;
       int beatCount = 0;
-      for(int i = 0; i < 60; i++){
+      for(int i = 0; i < 120; i++){
          if(hrArr[i] == 1){
             beatCount++; // count beats detected
          }
       }
-      for(int i = 0; i < 60; i++){hrArr[i] = 0;}
+      for(int i = 0; i <120; i++){hrArr[i] = 0;}
       Serial.print("BPM: ");
       Serial.println(beatCount * 2); // multiply by 2 for bpm
       count = 0; 
