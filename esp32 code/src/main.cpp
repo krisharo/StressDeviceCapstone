@@ -23,31 +23,31 @@ String apiKeyValue = "tPmAT5Ab3j7F9"; // API key for communicating with serverNa
 
 // These timers execute the respective function at given intervals,
 // readNLog is for https transmission, valueRead is for sensor readings
-//TickTwo timer1(readNLog, 1000*40); // once, every 40s
+TickTwo timer1(readNLog, 1000*60); // once, every 40s
 TickTwo timer2(valueRead, 250); // once every 500ms
 WiFiClientSecure client;
 
 
 void setup() {
-  //timer1.start(); // initialize timers
+  timer1.start(); // initialize timers
   timer2.start();
   Serial.begin(115200);
-   // WiFi.mode(WIFI_STA); //The WiFi is in station mode.
-   // WiFi.begin(ssid, password); // connect to wifi network
-   // while (WiFi.status() != WL_CONNECTED) {
-   //    delay(500);
-   //    Serial.print(".");
-   // }
-   // // successful connection
-   // Serial.println("");  Serial.print("WiFi connected to: "); Serial.println(ssid);  
-   // Serial.println("IP address: ");  Serial.println(WiFi.localIP());
-   // client.setCACert(ca_cert); //Only communicate with the server if the CA certificates match
+   WiFi.mode(WIFI_STA); //The WiFi is in station mode.
+   WiFi.begin(ssid, password); // connect to wifi network
+   while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+   }
+   // successful connection
+   Serial.println("");  Serial.print("WiFi connected to: "); Serial.println(ssid);  
+   Serial.println("IP address: ");  Serial.println(WiFi.localIP());
+   client.setCACert(ca_cert); //Only communicate with the server if the CA certificates match
 
    delay(1000);
 }
 
 void loop() {
- //timer1.update();
+ timer1.update();
  timer2.update();
  // update timers, nothing else should happen here since 
  // all operations are based on the ticker functions
@@ -69,7 +69,7 @@ void valueRead(){
       }
       int hr = analogRead(hrPin); // read hr every 500ms
       //Serial.println(hr);
-      if(hr > 1980){
+      if(hr > 1995){
          hrArr[count] = 1; // log if beat is detected
       }
       else{hrArr[count] = 0;}
@@ -90,10 +90,11 @@ void valueRead(){
             beatCount++; // count beats detected
          }
       }
-      for(int i = 0; i <120; i++){hrArr[i] = 0;}
-      Serial.print("BPM: ");
-      Serial.println(beatCount * 2); // multiply by 2 for bpm
-      count = 0; 
+      hAvg = (beatCount * 2) - 10; // number of beats in 30s * 2 = bpm
+      if(hAvg < 35){ // filter out heart rates that are too low as they are
+      // most likely wrong
+         hAvg = 0;
+      }
    }
    count++;
 }
@@ -115,7 +116,10 @@ void readNLog(){
       client.print("Content-Length: "); client.println(body_len);
       client.println("Connection: Close");
       client.println();
-      count =0;
+      count =0; // reset count
+      for(int i = 0; i < 120; i++){
+         hrArr[i] = 0; // reset beat array
+      }
       //Body
       client.println(body);
       client.println();
@@ -132,4 +136,5 @@ void readNLog(){
       client.stop();
       Serial.println("Connection Failed");
    }
+   
 }
