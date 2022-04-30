@@ -61,11 +61,14 @@ void loop() {
 void valueRead(){
    // collect analog values
    if(count < 120){
-      if(!count % 4){ // enter here every second
-         int temp = 0;
+      if(count % 4){ // enter here every second
+         int tempVal = analogRead(tPin);
+         float volts = tempVal/1023.0;             // normalize by the maximum temperature raw reading range
+         float temp = (volts - 0.5) * 100 ;         //calculate temperature celsius from voltage as per the equation found on the
          int gsr = 0;
-         tempArr[count / 4] = temp;
+         tempArr[count / 4] = (int)temp;
          gsrArr[count / 4] = gsr;
+         //Serial.println(temp);
       }
       int hr = analogRead(hrPin); // read hr every 500ms
       //Serial.println(hr);
@@ -76,7 +79,7 @@ void valueRead(){
    }
    
    else if(count >= 120){
-      Serial.println("data is ready for transmission");
+      //Serial.println("data is ready for transmission");
       int sumT = 0, sumG = 0;
       for(int i = 0; i < 30; i++){
          sumT += tempArr[i];
